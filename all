@@ -1,0 +1,195 @@
+echo '\n\n\n+++++++++++++++++++++++++++ important info:\n\n'
+
+function importantMsg() {echo "\n\e[1;42m\e[1;37m$1\e[0m\e[0m\n";}
+importantMsg '-> Create a separate admin macOS user and log in'
+importantMsg '-> Go to https://commercemarketplace.adobe.com/customer/accessKeys/ and grab your access keys to use as username and password respectively when prompted by the Magento installer'
+importantMsg '-> Adjust the variables below IF REALLY NEEDED (if you use a custom domain then make sure to manually map it in /etc/hosts)'
+importantMsg '-> Ensure the value of the MAGNATOOL_DIR variable does not end with a slash character'
+importantMsg '-> Copy, paste and execute the following commands in chunks (beware that the required standard macOS Terminal truncates the pasted commands list - watch out for the three dots prefixing your pasted commands list as it will break the command sequence and to fix this you must sufficiently zoom out the Terminal and paste the commands list again)'
+
+importantMsg '\n\n\n+++++++++++++++++++++++++++ variables:\n\n'
+
+MAGNATOOL_DOMAIN="127.0.0.1"
+MAGNATOOL_DIR="/Users/$(id -un)/$MAGNATOOL_DOMAIN"
+MAGNATOOL_PHP_VERSION="8.2"
+MAGNATOOL_XDEBUG_CLIENT_PORT="9003"
+MAGNATOOL_XDEBUG_IDEKEY="PHPSTORM"
+MAGNATOOL_MYSQL_VERSION="8.0"
+MAGNATOOL_MYSQL_AND_MAGENTO_PASSWORD="Pass@123"
+MAGNATOOL_MAGENTO_TIMEZONE="Europe/Bucharest"
+MAGNATOOL_MAGENTO_ADMIN_EMAIL="none@$MAGNATOOL_DOMAIN.google.com"
+MAGNATOOL_MAGENTO_ADMIN_USER="admin"
+
+importantMsg '\n\n\n+++++++++++++++++++++++++++ safe cleanup by backing up with timestamp in the file/dir name:\n\n'
+
+cd ~
+/opt/homebrew/bin/brew services stop --all
+echo 'Backing up /opt/homebrew/ directory so that we can start from scratch. Enter your sudo password:'
+sudo mv /opt/homebrew "/opt/homebrewbkp$(date +%s)"
+echo "Backing up $MAGNATOOL_DIR directory so that we can start from scratch. Enter your sudo password:"
+sudo mv $MAGNATOOL_DIR "$(echo $MAGNATOOL_DIR)bkp$(date +%s)"
+echo "Backing up $(echo ~)/.composer/auth.json file holding your Adobe Marketplace access keys so that we can start from scratch. Enter your sudo password:"
+sudo mv ~/.composer/auth.json "$(echo ~)/.composer/auth.jsonbkp$(date +%s)"
+
+importantMsg '\n\n\n+++++++++++++++++++++++++++ xcode:\n\n'
+
+xcode-select --install
+
+importantMsg '\n\n\n+++++++++++++++++++++++++++ homebrew:\n\n'
+
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+/opt/homebrew/bin/brew --version
+
+importantMsg '\n\n\n+++++++++++++++++++++++++++ php:\n\n'
+
+/opt/homebrew/bin/brew tap shivammathur/php
+/opt/homebrew/bin/brew install "shivammathur/php/php@$MAGNATOOL_PHP_VERSION"
+/opt/homebrew/bin/brew unlink php
+/opt/homebrew/bin/brew link --overwrite --force "php@$MAGNATOOL_PHP_VERSION"
+sed -i '' 's/upload_max_filesize = 2M/upload_max_filesize = 20M/' "/opt/homebrew/etc/php/$MAGNATOOL_PHP_VERSION/php.ini"
+sed -i '' 's/post_max_size = 8M/post_max_size = 20M/' "/opt/homebrew/etc/php/$MAGNATOOL_PHP_VERSION/php.ini"
+/opt/homebrew/bin/brew services start "php@$MAGNATOOL_PHP_VERSION"
+
+importantMsg '\n\n\n+++++++++++++++++++++++++++ xdebug:\n\n'
+
+/opt/homebrew/bin/pecl uninstall -r xdebug
+export PHP_AUTOCONF=/opt/homebrew/Cellar/autoconf/2.71/bin/autoconf
+export PHP_AUTOHEADER=/opt/homebrew/Cellar/autoconf/2.71/bin/autoheader
+/opt/homebrew/bin/pecl install xdebug
+sed -i '' 's/zend_extension="xdebug.so"//' "/opt/homebrew/etc/php/$MAGNATOOL_PHP_VERSION/php.ini"
+if [ 5 -ne $(grep -c '^\[xdebug\]\|^zend_extension=xdebug.so\|^xdebug.mode=\|^xdebug.client_port=\|^xdebug.idekey=' "/opt/homebrew/etc/php/$MAGNATOOL_PHP_VERSION/php.ini") ]; then echo "\n[xdebug]\nzend_extension=\"xdebug.so\"\nxdebug.mode=debug\nxdebug.client_port=$MAGNATOOL_XDEBUG_CLIENT_PORT\nxdebug.idekey=$MAGNATOOL_XDEBUG_IDEKEY\n" >> "/opt/homebrew/etc/php/$MAGNATOOL_PHP_VERSION/php.ini"; else echo '\n\e[1;41m\e[1;37m README! \e[0m\e[0m\e[1;41m\e[1;37m xdebug configs were not written to php.ini because they already exist BUT they might be incorrect! please manually check the file and adjust if necessary! \e[0m\e[0m\n'; fi;
+
+importantMsg '\n\n\n+++++++++++++++++++++++++++ httpd:\n\n'
+
+/opt/homebrew/bin/brew install httpd
+/opt/homebrew/bin/brew services start httpd
+
+sed -i '' "s/User _www/User $(id -un)/" /opt/homebrew/etc/httpd/httpd.conf
+sed -i '' "s/Group _www/Group $(id -gn)/" /opt/homebrew/etc/httpd/httpd.conf
+sed -i '' "s/Listen 8080/Listen 80/" /opt/homebrew/etc/httpd/httpd.conf
+sed -i '' "s:^#LoadModule rewrite_module lib/httpd/modules/mod_rewrite.so:LoadModule rewrite_module lib/httpd/modules/mod_rewrite.so\nLoadModule php_module /opt/homebrew/opt/php@$MAGNATOOL_PHP_VERSION/lib/httpd/modules/libphp.so:" /opt/homebrew/etc/httpd/httpd.conf
+sed -i '' "s/^#ServerName www.example.com:8080/ServerName $MAGNATOOL_DOMAIN:80/" /opt/homebrew/etc/httpd/httpd.conf
+mkdir -p "$MAGNATOOL_DIR"
+sed -i '' "s:^DocumentRoot \"/opt/homebrew/var/www\":DocumentRoot \"$MAGNATOOL_DIR\":" /opt/homebrew/etc/httpd/httpd.conf
+sed -i '' "s:^<Directory \"/opt/homebrew/var/www\">:<Directory \"$MAGNATOOL_DIR\">:" /opt/homebrew/etc/httpd/httpd.conf
+sed -i '' "s/AllowOverride None/AllowOverride All/" /opt/homebrew/etc/httpd/httpd.conf
+
+cat << HEREDOC >> /opt/homebrew/etc/httpd/httpd.conf
+<FilesMatch \.php$>
+        SetHandler application/x-httpd-php
+</FilesMatch>
+HEREDOC
+
+/opt/homebrew/bin/httpd -t
+/opt/homebrew/bin/brew services restart httpd
+/opt/homebrew/bin/brew services list
+
+importantMsg '\n\n\n+++++++++++++++++++++++++++ test PHP, xdebug, httpd:\n\n'
+
+/opt/homebrew/bin/brew services list
+lsof -i -n -P | grep httpd
+mv "$MAGNATOOL_DIR/.htaccess" "$MAGNATOOL_DIR/htaccess"
+echo "<?php echo phpinfo(); ?>" > "$MAGNATOOL_DIR/phpinfo.php"
+searchInPhpinfoWebPage="php.ini\|xdebug.mode\|xdebug.client_port\|xdebug.idekey\|$MAGNATOOL_DOMAIN"; curl -s "http://$MAGNATOOL_DOMAIN/phpinfo.php" | grep -i --color=auto $searchInPhpinfoWebPage
+rm -rf "$MAGNATOOL_DIR/phpinfo.php"
+mv "$MAGNATOOL_DIR/htaccess" "$MAGNATOOL_DIR/.htaccess"
+
+importantMsg '\n\n\n+++++++++++++++++++++++++++ mysql:\n\n'
+
+/opt/homebrew/bin/brew install "mysql@$MAGNATOOL_MYSQL_VERSION"
+/opt/homebrew/bin/brew link --overwrite --force "mysql@$MAGNATOOL_MYSQL_VERSION"
+/opt/homebrew/bin/brew services start "mysql@$MAGNATOOL_MYSQL_VERSION"
+/opt/homebrew/bin/mysql -uroot -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MAGNATOOL_MYSQL_AND_MAGENTO_PASSWORD';"
+
+/opt/homebrew/bin/brew services list
+ps auxwww | grep mysql
+lsof -i -n -P | grep 3306
+
+importantMsg '\n\n\n+++++++++++++++++++++++++++ opensearch:\n\n'
+
+/opt/homebrew/bin/brew install opensearch
+/opt/homebrew/bin/brew services start opensearch
+/opt/homebrew/bin/brew services restart opensearch
+
+/opt/homebrew/bin/brew services list
+ps auxwww | grep opensearch
+lsof -i -n -P | grep 9200
+
+importantMsg '\n\n\n+++++++++++++++++++++++++++ composer:\n\n'
+
+/opt/homebrew/bin/brew install composer
+
+echo "Backing up /usr/local/bin/php symlink so that we can start from scratch. Enter your sudo password:"
+sudo mv /usr/local/bin/php "/usr/local/bin/phpbkp$(date +%s)"
+echo "We create a symlink /usr/local/bin/php pointing to /opt/homebrew/opt/php@$MAGNATOOL_PHP_VERSION/bin/php so that we can start from scratch. Enter your sudo password:"
+sudo ln -s "/opt/homebrew/opt/php@$MAGNATOOL_PHP_VERSION/bin/php" /usr/local/bin/php
+
+importantMsg '\n\n\n+++++++++++++++++++++++++++ magento codebase:\n\n'
+
+/opt/homebrew/bin/composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition $MAGNATOOL_DIR
+
+find "$MAGNATOOL_DIR/var/" \
+"$MAGNATOOL_DIR/generated/" \
+"$MAGNATOOL_DIR/vendor/" \
+"$MAGNATOOL_DIR/pub/static/" \
+"$MAGNATOOL_DIR/pub/media/" \
+"$MAGNATOOL_DIR/app/etc/" \
+-type f -exec chmod g+w {} +
+
+find "$MAGNATOOL_DIR/var/" \
+"$MAGNATOOL_DIR/generated/" \
+"$MAGNATOOL_DIR/vendor/" \
+"$MAGNATOOL_DIR/pub/static/" \
+"$MAGNATOOL_DIR/pub/media/" \
+"$MAGNATOOL_DIR/app/etc/" \
+-type f -exec chmod g+ws {} +
+
+chmod u+x "$MAGNATOOL_DIR/bin/magento"
+
+importantMsg '\n\n\n+++++++++++++++++++++++++++ magento application install:\n\n'
+
+cd $MAGNATOOL_DIR
+/opt/homebrew/bin/mysql -uroot -p$MAGNATOOL_MYSQL_AND_MAGENTO_PASSWORD -e "create database magento;"
+
+sed -i '' 's/^memory_limit = 128M/memory_limit = 4G/' "/opt/homebrew/etc/php/$MAGNATOOL_PHP_VERSION/php.ini"
+sed -i '' 's/^max_execution_time = 30/max_execution_time = 1800/' "/opt/homebrew/etc/php/$MAGNATOOL_PHP_VERSION/php.ini"
+sed -i '' 's/^zlib.output_compression = Off/zlib.output_compression = On/' "/opt/homebrew/etc/php/$MAGNATOOL_PHP_VERSION/php.ini"
+/opt/homebrew/bin/brew services restart "php@$MAGNATOOL_PHP_VERSION"
+
+cd $MAGNATOOL_DIR; bin/magento setup:install \
+"--base-url=http://$MAGNATOOL_DOMAIN/" \
+--db-host=localhost \
+--db-name=magento \
+--db-user=root \
+"--db-password=$MAGNATOOL_MYSQL_AND_MAGENTO_PASSWORD" \
+--admin-firstname=admin \
+--admin-lastname=admin \
+"--admin-email=$MAGNATOOL_MAGENTO_ADMIN_EMAIL" \
+"--admin-user=$MAGNATOOL_MAGENTO_ADMIN_USER" \
+"--admin-password=$MAGNATOOL_MYSQL_AND_MAGENTO_PASSWORD" \
+--language=en_US \
+--currency=USD \
+"--timezone=$MAGNATOOL_MAGENTO_TIMEZONE" \
+--use-rewrites=1 \
+--search-engine=opensearch \
+--opensearch-host=localhost \
+--opensearch-port=9200 \
+--opensearch-index-prefix=magento2 \
+--opensearch-timeout=15
+
+importantMsg '\n\n\n+++++++++++++++++++++++++++ magento application configure:\n\n'
+
+cd $MAGNATOOL_DIR; bin/magento deploy:mode:set developer
+cd $MAGNATOOL_DIR; bin/magento module:disable Magento_AdminAdobeImsTwoFactorAuth Magento_TwoFactorAuth
+cd $MAGNATOOL_DIR; bin/magento setup:di:compile
+cd $MAGNATOOL_DIR; bin/magento setup:upgrade
+cd $MAGNATOOL_DIR; bin/magento cache:flush
+
+importantMsg '\n\n\n+++++++++++++++++++++++++++ finish:\n\n'
+
+curl -s "http://$MAGNATOOL_DOMAIN/$(cat "$MAGNATOOL_DIR/app/etc/env.php" | grep frontName | rev | cut -c2-13 | rev)?some=warmup" > /dev/null
+
+function successMsg() {echo "\n\e[1;42m\e[1;37m $1 \n\e[0m\e[0m\e[1;42m\e[1;37m$2\e[0m\e[0m\n";}
+successMsg "Admin URL:" "http://$MAGNATOOL_DOMAIN/$(cat "$MAGNATOOL_DIR/app/etc/env.php" | grep frontName | rev | cut -c2-13 | rev)"
+successMsg "Admin user:" $MAGNATOOL_MAGENTO_ADMIN_USER
+successMsg "Admin password:" $MAGNATOOL_MYSQL_AND_MAGENTO_PASSWORD
