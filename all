@@ -1,6 +1,8 @@
-echo '\n\n\n+++++++++++++++++++++++++++ important info:\n\n'
-
 function importantMsg() {echo "\n\e[1;42m\e[1;37m$1\e[0m\e[0m\n";}
+
+importantMsg '\n\n\n+++++++++++++++++++++++++++ Magento native local setup on macOS:\n\n'
+importantMsg '\n\n\n+++++++++++++++++++++++++++ important info:\n\n'
+
 importantMsg '-> Create a separate admin macOS user and log in'
 importantMsg '-> Go to https://commercemarketplace.adobe.com/customer/accessKeys/ and grab your access keys to use as username and password respectively when prompted by the Magento installer'
 importantMsg '-> Adjust the variables below IF REALLY NEEDED (if you use a custom domain then make sure to manually map it in /etc/hosts)'
