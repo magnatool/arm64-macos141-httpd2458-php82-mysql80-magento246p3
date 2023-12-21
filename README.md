@@ -1,1 +1,1 @@
-#Magento native local setup on macOS
+## Magento native local setup on macOS
