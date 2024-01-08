@@ -1,15 +1,16 @@
 function importantMsg() {echo "\n\e[1;42m\e[1;37m$1\e[0m\e[0m\n";}
+function successMsg() {echo "\n\e[1;42m\e[1;37m $1 \n\e[0m\e[0m\e[1;42m\e[1;37m$2\e[0m\e[0m\n";}
 
 importantMsg '\n\n\n+++++++++++++++++++++++++++ Magento native local setup on macOS:\n\n'
 importantMsg '\n\n\n+++++++++++++++++++++++++++ important info:\n\n'
 
 importantMsg '-> Create a separate admin macOS user and log in'
 importantMsg '-> Go to https://commercemarketplace.adobe.com/customer/accessKeys/ and grab your access keys to use as username and password respectively when prompted by the Magento installer'
-importantMsg '-> Adjust the variables below IF REALLY NEEDED (if you use a custom domain then make sure to manually map it in /etc/hosts)'
+importantMsg '-> Adjust the MAGNATOOL_* variables below IF REALLY NEEDED (if you use a custom domain then make sure to manually map it in /etc/hosts)'
 importantMsg '-> Ensure the value of the MAGNATOOL_DIR variable does not end with a slash character'
 importantMsg '-> Copy, paste and execute the following commands in chunks (beware that the required standard macOS Terminal truncates the pasted commands list - watch out for the three dots prefixing your pasted commands list as it will break the command sequence and to fix this you must sufficiently zoom out the Terminal and paste the commands list again)'
 
-importantMsg '\n\n\n+++++++++++++++++++++++++++ variables:\n\n'
+importantMsg '\n\n\n+++++++++++++++++++++++++++ definitions:\n\n'
 
 MAGNATOOL_DOMAIN="127.0.0.1"
 MAGNATOOL_DIR="/Users/$(id -un)/$MAGNATOOL_DOMAIN"
@@ -191,7 +192,6 @@ importantMsg '\n\n\n+++++++++++++++++++++++++++ finish:\n\n'
 
 curl -s "http://$MAGNATOOL_DOMAIN/$(cat "$MAGNATOOL_DIR/app/etc/env.php" | grep frontName | rev | cut -c2-13 | rev)?some=warmup" > /dev/null
 
-function successMsg() {echo "\n\e[1;42m\e[1;37m $1 \n\e[0m\e[0m\e[1;42m\e[1;37m$2\e[0m\e[0m\n";}
 successMsg "Admin URL:" "http://$MAGNATOOL_DOMAIN/$(cat "$MAGNATOOL_DIR/app/etc/env.php" | grep frontName | rev | cut -c2-13 | rev)"
 successMsg "Admin user:" $MAGNATOOL_MAGENTO_ADMIN_USER
 successMsg "Admin password:" $MAGNATOOL_MYSQL_AND_MAGENTO_PASSWORD
