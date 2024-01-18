@@ -108,6 +108,7 @@ importantMsg '\n\n\n+++++++++++++++++++++++++++ mysql:\n\n'
 /opt/homebrew/bin/brew install "mysql@$MAGNATOOL_MYSQL_VERSION"
 /opt/homebrew/bin/brew link --overwrite --force "mysql@$MAGNATOOL_MYSQL_VERSION"
 /opt/homebrew/bin/brew services start "mysql@$MAGNATOOL_MYSQL_VERSION"
+sleep 3
 /opt/homebrew/bin/mysql -uroot -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MAGNATOOL_MYSQL_AND_MAGENTO_PASSWORD';"
 
 /opt/homebrew/bin/brew services list
