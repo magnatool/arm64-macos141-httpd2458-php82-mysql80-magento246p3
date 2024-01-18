@@ -61,6 +61,7 @@ sed -i '' 's/post_max_size = 8M/post_max_size = 20M/' "/opt/homebrew/etc/php/$MA
 importantMsg '\n\n\n+++++++++++++++++++++++++++ xdebug:\n\n'
 
 /opt/homebrew/bin/pecl uninstall -r xdebug
+/opt/homebrew/bin/brew install autoconf
 export PHP_AUTOCONF="/opt/homebrew/Cellar/autoconf/$MAGNATOOL_XDEBUG_AUTOCONF_VERSION/bin/autoconf"
 export PHP_AUTOHEADER="/opt/homebrew/Cellar/autoconf/$MAGNATOOL_XDEBUG_AUTOCONF_VERSION/bin/autoheader"
 /opt/homebrew/bin/pecl install "xdebug-$MAGNATOOL_XDEBUG_VERSION"
