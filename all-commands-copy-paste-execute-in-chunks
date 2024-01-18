@@ -15,8 +15,8 @@ importantMsg '\n\n\n+++++++++++++++++++++++++++ definitions:\n\n'
 MAGNATOOL_DOMAIN="127.0.0.1"
 MAGNATOOL_DIR="/Users/$(id -un)/$MAGNATOOL_DOMAIN"
 MAGNATOOL_PHP_VERSION="8.2"
-MAGNATOOL_AUTOCONF_VERSION="2.71"
 MAGNATOOL_XDEBUG_VERSION="3.3.1"
+MAGNATOOL_XDEBUG_AUTOCONF_VERSION="2.71"
 MAGNATOOL_XDEBUG_CLIENT_PORT="9003"
 MAGNATOOL_XDEBUG_IDEKEY="PHPSTORM"
 MAGNATOOL_MYSQL_VERSION="8.0"
@@ -61,8 +61,8 @@ sed -i '' 's/post_max_size = 8M/post_max_size = 20M/' "/opt/homebrew/etc/php/$MA
 importantMsg '\n\n\n+++++++++++++++++++++++++++ xdebug:\n\n'
 
 /opt/homebrew/bin/pecl uninstall -r xdebug
-export PHP_AUTOCONF="/opt/homebrew/Cellar/autoconf/$MAGNATOOL_AUTOCONF_VERSION/bin/autoconf"
-export PHP_AUTOHEADER="/opt/homebrew/Cellar/autoconf/$MAGNATOOL_AUTOCONF_VERSION/bin/autoheader"
+export PHP_AUTOCONF="/opt/homebrew/Cellar/autoconf/$MAGNATOOL_XDEBUG_AUTOCONF_VERSION/bin/autoconf"
+export PHP_AUTOHEADER="/opt/homebrew/Cellar/autoconf/$MAGNATOOL_XDEBUG_AUTOCONF_VERSION/bin/autoheader"
 /opt/homebrew/bin/pecl install "xdebug-$MAGNATOOL_XDEBUG_VERSION"
 sed -i '' 's/zend_extension="xdebug.so"//' "/opt/homebrew/etc/php/$MAGNATOOL_PHP_VERSION/php.ini"
 if [ 5 -ne $(grep -c '^\[xdebug\]\|^zend_extension=xdebug.so\|^xdebug.mode=\|^xdebug.client_port=\|^xdebug.idekey=' "/opt/homebrew/etc/php/$MAGNATOOL_PHP_VERSION/php.ini") ]; then echo "\n[xdebug]\nzend_extension=\"xdebug.so\"\nxdebug.mode=debug\nxdebug.client_port=$MAGNATOOL_XDEBUG_CLIENT_PORT\nxdebug.idekey=$MAGNATOOL_XDEBUG_IDEKEY\n" >> "/opt/homebrew/etc/php/$MAGNATOOL_PHP_VERSION/php.ini"; else echo '\n\e[1;41m\e[1;37m README! \e[0m\e[0m\e[1;41m\e[1;37m xdebug configs were not written to php.ini because they already exist BUT they might be incorrect! please manually check the file and adjust if necessary! \e[0m\e[0m\n'; fi;
