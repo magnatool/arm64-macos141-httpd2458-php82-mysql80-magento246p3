@@ -41,6 +41,9 @@ xcode-select --install
 importantMsg '\n\n\n+++++++++++++++++++++++++++ homebrew:\n\n'
 
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+echo 'Making /opt/homebrew/var/log writable. Enter your sudo password:'
+sudo chown -R hynat /opt/homebrew/var/log
+chmod u+w /opt/homebrew/var/log
 /opt/homebrew/bin/brew --version
 
 importantMsg '\n\n\n+++++++++++++++++++++++++++ php:\n\n'
