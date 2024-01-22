@@ -57,6 +57,13 @@ sed -i '' 's/upload_max_filesize = 2M/upload_max_filesize = 20M/' "/opt/homebrew
 sed -i '' 's/post_max_size = 8M/post_max_size = 20M/' "/opt/homebrew/etc/php/$MAGNATOOL_PHP_VERSION/php.ini"
 /opt/homebrew/bin/brew services start "php@$MAGNATOOL_PHP_VERSION"
 
+importantMsg '\n\n\n+++++++++++++++++++++++++++ php CLI availability (composer, ./bin/magento etc):\n\n'
+
+echo "Backing up /usr/local/bin/php symlink so that we can start from scratch. Enter your sudo password:"
+sudo mv /usr/local/bin/php "/usr/local/bin/phpbkp$(date +%s)"
+echo "We create a symlink /usr/local/bin/php pointing to /opt/homebrew/opt/php@$MAGNATOOL_PHP_VERSION/bin/php so that we can start from scratch. Enter your sudo password:"
+sudo ln -s "/opt/homebrew/opt/php@$MAGNATOOL_PHP_VERSION/bin/php" /usr/local/bin/php
+
 importantMsg '\n\n\n+++++++++++++++++++++++++++ xdebug:\n\n'
 
 /opt/homebrew/bin/pecl uninstall -r xdebug
@@ -128,11 +135,6 @@ lsof -i -n -P | grep 9200
 importantMsg '\n\n\n+++++++++++++++++++++++++++ composer:\n\n'
 
 /opt/homebrew/bin/brew install composer
-
-echo "Backing up /usr/local/bin/php symlink so that we can start from scratch. Enter your sudo password:"
-sudo mv /usr/local/bin/php "/usr/local/bin/phpbkp$(date +%s)"
-echo "We create a symlink /usr/local/bin/php pointing to /opt/homebrew/opt/php@$MAGNATOOL_PHP_VERSION/bin/php so that we can start from scratch. Enter your sudo password:"
-sudo ln -s "/opt/homebrew/opt/php@$MAGNATOOL_PHP_VERSION/bin/php" /usr/local/bin/php
 
 importantMsg '\n\n\n+++++++++++++++++++++++++++ magento codebase:\n\n'
 importantMsg '-> Go to https://commercemarketplace.adobe.com/customer/accessKeys/ and grab your access keys to use as username and password respectively when prompted by the Magento installer'
