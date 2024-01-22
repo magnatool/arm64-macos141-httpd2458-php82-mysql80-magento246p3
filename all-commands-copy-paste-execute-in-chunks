@@ -135,7 +135,7 @@ echo "We create a symlink /usr/local/bin/php pointing to /opt/homebrew/opt/php@$
 sudo ln -s "/opt/homebrew/opt/php@$MAGNATOOL_PHP_VERSION/bin/php" /usr/local/bin/php
 
 importantMsg '\n\n\n+++++++++++++++++++++++++++ magento codebase:\n\n'
-
+importantMsg '-> Go to https://commercemarketplace.adobe.com/customer/accessKeys/ and grab your access keys to use as username and password respectively when prompted by the Magento installer'
 /opt/homebrew/bin/composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition $MAGNATOOL_DIR
 
 find "$MAGNATOOL_DIR/var/" \
